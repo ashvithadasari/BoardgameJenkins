@@ -16,6 +16,6 @@ spec:
     spec:
       containers:
       - name: board-app
-        image: prasadacr3dbbzl.azurecr.io/board-app:v1
+        image: prasadpalnati/board-app:latest
         ports:
         - containerPort: 8080
