@@ -4,7 +4,7 @@ pipeline {
     environment {
         IMAGE_NAME    = "board-app"
         DOCKERHUB_USER = "prasadpalnati"
-        EKS_CLUSTER   = "prasadk8s-cluster1"
+        EKS_CLUSTER   = "ashu-cluster1"
         AWS_REGION    = "ap-south-1"
     }
 
@@ -12,7 +12,7 @@ pipeline {
 
         stage('Checkout') {
             steps {
-                git 'https://github.com/LALITHAPRASAD272/BoardgameJenkins.git'
+                git 'https://github.com/ashvithadasari/BoardgameJenkins.git'
             }
         }
 
@@ -29,7 +29,7 @@ pipeline {
                     mvn sonar:sonar \
                     -Dsonar.projectKey=Boardgame \
                     -Dsonar.projectName=Boardgame \
-                    -Dsonar.host.url=http://3.108.225.110:9000 \
+                    -Dsonar.host.url=http://3.110.134.51:9000\
                     -Dsonar.login=$SONAR_TOKEN
                     '''
                 }
@@ -79,7 +79,7 @@ pipeline {
             steps {
                 withCredentials([
                     [$class: 'AmazonWebServicesCredentialsBinding',
-                    credentialsId: 'aws-creds']
+                    credentialsId: '842891064853']
                 ]) {
                     sh '''
                     aws eks update-kubeconfig \
