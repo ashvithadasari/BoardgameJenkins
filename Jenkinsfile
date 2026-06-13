@@ -9,12 +9,12 @@ pipeline {
     }
 
     stages {
-
         stage('Checkout') {
             steps {
-                git 'https://github.com/ashvithadasari/BoardgameJenkins.git'
-            }
-        }
+                git branch: 'main',
+                    url: 'https://github.com/ashvithadasari/BoardgameJenkins.git'
+    }   
+}
 
         stage('Build') {
             steps {
