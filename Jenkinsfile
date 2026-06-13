@@ -79,7 +79,7 @@ pipeline {
             steps {
                 withCredentials([
                     [$class: 'AmazonWebServicesCredentialsBinding',
-                    credentialsId: 'AWS Credentials']
+                    credentialsId: 'credentialsaws']
                 ]) {
                     sh '''
                     aws eks update-kubeconfig \
