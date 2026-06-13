@@ -77,15 +77,24 @@ pipeline {
 
         stage('Deploy to EKS') {
             steps {
-                withCredentials([
-                    [$class: 'AmazonWebServicesCredentialsBinding',
-                    credentialsId: 'credentialsaws']
-                ]) {
+                withCredentials([[
+                    $class: 'AmazonWebServicesCredentialsBinding',
+                    accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                    secretKeyVariable: 'AWS_SECRET_ACCESS_KEY',
+                    credentialsId: 'credentialsaws'
+                ]]) {
                     sh '''
-                    aws eks update-kubeconfig \
-                    --region $AWS_REGION \
-                    --name $EKS_CLUSTER
+                    set -e
 
+                    echo "Testing AWS identity..."
+                    aws sts get-caller-identity
+
+                    echo "Updating kubeconfig..."
+                    aws eks update-kubeconfig \
+                      --region $AWS_REGION \
+                      --name $EKS_CLUSTER
+
+                    echo "Deploying Kubernetes manifests..."
                     kubectl apply -f k8s/deployment.yaml
                     kubectl apply -f k8s/service.yaml
                     '''
