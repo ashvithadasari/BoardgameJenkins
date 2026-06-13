@@ -2,17 +2,17 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = "board-app"
-        DOCKERHUB_USER = "YOUR_DOCKERHUB_USERNAME"
-        EKS_CLUSTER = "YOUR_EKS_CLUSTER"
-        AWS_REGION = "ap-south-1"
+        IMAGE_NAME    = "board-app"
+        DOCKERHUB_USER = "prasadpalnati"
+        EKS_CLUSTER   = "prasadk8s-cluster1"
+        AWS_REGION    = "ap-south-1"
     }
 
     stages {
 
         stage('Checkout') {
             steps {
-                git 'https://github.com/YOUR_GITHUB_REPO.git'
+                git 'https://github.com/LALITHAPRASAD272/BoardgameJenkins.git'
             }
         }
 
@@ -24,13 +24,15 @@ pipeline {
 
         stage('SonarQube Scan') {
             steps {
-                sh '''
-                mvn sonar:sonar \
-                -Dsonar.projectKey=Boardgame \
-                -Dsonar.projectName=Boardgame \
-                -Dsonar.host.url=http://localhost:9000 \
-                -Dsonar.login=YOUR_SONAR_TOKEN
-                '''
+                withCredentials([string(credentialsId: 'jenkins-token', variable: 'SONAR_TOKEN')]) {
+                    sh '''
+                    mvn sonar:sonar \
+                    -Dsonar.projectKey=Boardgame \
+                    -Dsonar.projectName=Boardgame \
+                    -Dsonar.host.url=http://3.108.225.110:9000 \
+                    -Dsonar.login=$SONAR_TOKEN
+                    '''
+                }
             }
         }
 
@@ -42,16 +44,26 @@ pipeline {
 
         stage('Docker Build') {
             steps {
-                sh 'docker build -t $DOCKERHUB_USER/$IMAGE_NAME:latest .'
+                sh '''
+                docker build -t $DOCKERHUB_USER/$IMAGE_NAME:latest .
+                '''
             }
         }
 
         stage('Docker Hub Login') {
             steps {
-                sh '''
-                echo "YOUR_DOCKERHUB_PASSWORD" | docker login \
-                -u $DOCKERHUB_USER --password-stdin
-                '''
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'dockerhub',
+                        usernameVariable: 'DOCKER_USER',
+                        passwordVariable: 'DOCKER_PASS'
+                    )
+                ]) {
+                    sh '''
+                    echo $DOCKER_PASS | docker login \
+                    -u $DOCKER_USER --password-stdin
+                    '''
+                }
             }
         }
 
@@ -65,14 +77,19 @@ pipeline {
 
         stage('Deploy to EKS') {
             steps {
-                sh '''
-                aws eks update-kubeconfig \
-                --region $AWS_REGION \
-                --name $EKS_CLUSTER
+                withCredentials([
+                    [$class: 'AmazonWebServicesCredentialsBinding',
+                    credentialsId: 'aws-creds']
+                ]) {
+                    sh '''
+                    aws eks update-kubeconfig \
+                    --region $AWS_REGION \
+                    --name $EKS_CLUSTER
 
-                kubectl apply -f k8s/deployment.yaml
-                kubectl apply -f k8s/service.yaml
-                '''
+                    kubectl apply -f k8s/deployment.yaml
+                    kubectl apply -f k8s/service.yaml
+                    '''
+                }
             }
         }
     }
